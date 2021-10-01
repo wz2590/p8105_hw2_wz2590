@@ -96,12 +96,38 @@ The median number of sports balls in a dumpster in 2017 is 8.
 
 First, clean the data in pols-month.csv
 ```{r}
-pols_month_df = read_csv("./data/fivethirtyeight_datasets/pols-month.csv") %>% 
-             separate(mon, into = c("year", "month", "day"), sep = "-", convert = T)
+pols_month_df_raw = read_csv("./data/fivethirtyeight_datasets/pols-month.csv")
+
+#pols_month_df_raw
+ 
+pol_month_df = pols_month_df_raw %>%       
+  janitor::clean_names() %>% 
+  separate(mon, into = c("year", "month", "day"), sep = "-", convert = T) %>% 
+  mutate(month = month.name[month], 
+         president = ifelse(prez_gop >= 1 & prez_dem == 0, "gop", "dem")) %>% 
+  select(-c(day, prez_gop, prez_dem))
+  
+pol_month_df
 ```
 
 
+Second, clean the data in snp.csv using a similar process to the above.
 
+```{r}
+snp_df_raw = read_csv("./data/fivethirtyeight_datasets/pols-month.csv")
+
+#snp_df_raw
+ 
+snp_df = snp_df_raw %>%       
+  janitor::clean_names() %>% 
+  separate(mon, into = c("year", "month", "day"), sep = "-", convert = T) %>% 
+  mutate(month = month.name[month], 
+         president = ifelse(prez_gop >= 1 & prez_dem == 0, "gop", "dem")) %>% 
+  select(-c(day, prez_gop, prez_dem)) %>% 
+  arrange(year, month)
+  
+snp_df
+```
 
 
 
