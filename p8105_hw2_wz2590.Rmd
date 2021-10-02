@@ -130,7 +130,105 @@ snp_df
 ```
 
 
+Tidy the unemployment data so that it can be merged with the previous datasets. 
+
+```{r}
+unemployment_df_raw = read.csv("./data/fivethirtyeight_datasets/unemployment.csv") 
+
+unemployment_df_raw
+
+unemployment_df = unemployment_df_raw %>%
+  pivot_longer(Jan:Dec, names_to = "month", values_to = "unemployment_percentage") %>%
+  mutate(month = match(month, month.abb), month = month.name[month]) %>% 
+  janitor::clean_names()
+
+unemployment_df
+  
+```
+
+
+```{r}
+merged_df = left_join(pol_month_df, snp_df, by = c("year", "month")) %>% 
+  left_join(unemployment_df, by = c("year", "month")) %>% 
+  janitor::clean_names()
+
+year_range = merged_df %>% 
+  select(year) %>% 
+  range()
+
+merged_df
+year_range
+```
 
 
 
+Describe the data:
+
+
+
+
+
+### Problem 3
+
+
+Load and tidy the data
+
+```{r}
+baby_names_df = read_csv("./data/Popular_Baby_Names.csv") %>% 
+  janitor::clean_names() %>%
+  #view %>% 
+  mutate(ethnicity = recode(ethnicity, 
+                            "ASIAN AND PACI" = "ASIAN AND PACIFIC ISLANDER",
+                            "BLACK NON HISP" = "BLACK NON HISPANIC",
+                            "WHITE NON HISP" = "WHITE NON HISPANIC"),
+         childs_first_name = str_to_sentence(childs_first_name)) %>% 
+  dplyr::distinct() %>% 
+  
+  view
+```
+
+
+Produce a well-structured, reader-friendly table showing the rank in popularity of the name “Olivia” as a female baby name over time.
+
+```{r}
+Olivia_rankTable = baby_names_df %>% 
+  filter(childs_first_name == "Olivia", gender == "FEMALE") %>%
+  pivot_wider(names_from = "year_of_birth",
+              values_from = "rank",
+              id_cols = ethnicity
+    )
+
+Olivia_rankTable
+  
+```
+
+Produce a similar table showing the most popular name among male children over time.
+
+```{r}
+boy_nameRank = baby_names_df %>% 
+  filter(gender == "MALE", rank == 1) %>% 
+  select(-count, -rank, -gender) %>% 
+  pivot_wider(
+    names_from = "year_of_birth",
+    values_from = "childs_first_name"
+    )
+  
+boy_nameRank
+```
+
+
+For male, white non-hispanic children born in 2016, produce a scatter plot showing the number of children with a name (y axis) against the rank in popularity of that name (x axis).
+
+```{r}
+name_vs_rank_16 = baby_names_df %>% 
+  filter(year_of_birth == 2016,
+         gender == "MALE",
+         ethnicity == "WHITE NON HISPANIC",
+         ) %>%
+  ggplot(aes(x = rank, y = count)) + geom_point() + 
+  xlab("rank in popularity") + ylab("children name count") +
+  labs(title = "Scatterplot of children name count vs. rank in popularity")
+
+name_vs_rank_16
+```
 
