@@ -15,13 +15,12 @@ library(tidyverse)
 Read and clean the Mr. Trash Wheel sheet.
 
 ```{r}
-trashWheels_df = readxl::read_excel("./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx", range = "A2:N408") %>%
+trashWheels_df = readxl::read_excel("./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx", 
+                                    range = "A2:N408") %>%
   janitor::clean_names() %>% # make the naming uniform
   drop_na(dumpster) %>% # drop all the rows that is not dumpster specific
-  mutate (
-    sports_balls = round(sports_balls) %>% 
-      as.integer()
-  )
+  mutate(sports_balls = round(sports_balls))
+
 trashWheels_df
 ```
 
@@ -30,13 +29,13 @@ Read and clean precipitation data for 2018 and 2019.
 ```{r}
 precipitation_18_raw = readxl::read_excel("./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx", 
                                       sheet = "2018 Precipitation",
-                                      skip = 1)
-precipitation_18_raw
+                                      range = "A2:B14")
+#precipitation_18_raw
 
 precipitation_18_tidy = precipitation_18_raw %>% 
   drop_na(Month, Total) %>% 
-  mutate (year = 2018) %>%
-  subset (select = c(3,1,2))
+  mutate(year = 2018) %>%
+  subset(select = c(3,1,2))
 
 precipitation_18_tidy
 ```
@@ -44,13 +43,13 @@ precipitation_18_tidy
 ```{r}
 precipitation_19_raw = readxl::read_excel("./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx", 
                                       sheet = "2019 Precipitation",
-                                      skip = 1)
-precipitation_19_raw
+                                      range = "A2:B14")
+#precipitation_19_raw
 
 precipitation_19_tidy = precipitation_19_raw %>% 
   drop_na(Month, Total) %>% 
-  mutate (year = 2019,) %>%
-  subset (select = c(3,1,2))
+  mutate(year = 2019,) %>%
+  subset(select = c(3,1,2))
 
 precipitation_19_tidy
 ```
@@ -59,21 +58,21 @@ Combine the 2018 and 2019 data, and convert month to a character variable
 ```{r}
 precipitation_comb = 
   bind_rows(precipitation_18_tidy, precipitation_19_tidy) %>%
-  mutate (Month = month.name[Month])
+  mutate(Month = month.name[Month])
 
 precipitation_comb
 ```
 
 
-
+Calculate the median number of sports balls in a dumpster in 2019
 ```{r}
-sportsBalls_2017 = trashWheels_df %>% 
-  filter(year == 2017) %>% 
+sportsBalls_2019 = trashWheels_df %>% 
+  filter(year == 2019) %>% 
   select(sports_balls)
 
-med_sportsBalls_2017 = median(sportsBalls_2017[[1]])
+med_sportsBalls_2019 = median(sportsBalls_2019[[1]])
 
-med_sportsBalls_2017
+med_sportsBalls_2019
 ```
 
 
@@ -81,12 +80,14 @@ med_sportsBalls_2017
 
 
 
-Mr. Trash Wheel is “a water-wheel vessel that removes trash from the Inner Harbor in Baltimore, Maryland. This dataset contains these information that is specific to each dumpster: month, year, date, weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts, glass_bottles, grocery_bags, chip_bags, sports_balls, homes_powered.
+Mr. Trash Wheel is “a water-wheel vessel that removes trash from the Inner Harbor in Baltimore, Maryland. The trashWheels_df data frame contains these information that is specific to each dumpster. There are `r nrow(trashWheels_df)` observations in the trashWheels_df data frame, each observation has `r ncol(trashWheels_df)` variables.
 
-The precipitation_comb data frame contains the precipitation(in) on each month from Jan 2018 to Jun 2019. 
+The precipitation_comb data frame contains the precipitation(in) on each month from Jan 2018 to Jun 2019. There are `r nrow(precipitation_comb )` observations in this data frame
+
+The key variables are `month` and `year`.
 
 The total precipitation in 2018 is `r sum(precipitation_18_tidy$Total)` inches. 
-The median number of sports balls in a dumpster in 2017 is 8.
+The median number of sports balls in a dumpster in 2019 is 8.5
 
 
 
@@ -135,7 +136,7 @@ Tidy the unemployment data so that it can be merged with the previous datasets.
 ```{r}
 unemployment_df_raw = read.csv("./data/fivethirtyeight_datasets/unemployment.csv") 
 
-unemployment_df_raw
+#unemployment_df_raw
 
 unemployment_df = unemployment_df_raw %>%
   pivot_longer(Jan:Dec, names_to = "month", values_to = "unemployment_percentage") %>%
@@ -163,7 +164,10 @@ year_range
 
 
 Describe the data:
-
+The pol_month_df data frame describes the number of national politicians who are democratic or republican at any given time. It has `r nrow(pol_month_df)` observations, with each observations having `r ncol(pol_month_df)` variables.
+The snp_df data frame describes the Standard & Poor’s stock market index (S&P), often used as a representative measure of stock market as a whole. It has `r nrow(snp_df)` observations, with each observations having `r ncol(snp_df)` variables.
+The unemployment_df data frame contains the unemployment percentage for each month from January 1948 to December 2015. It has `r nrow(unemployment_df)` observations, with each observations having `r ncol(unemployment_df)` variables.
+The merged_df data frame is a combination of the previous three with key variables `year` and `month`. The year ranges from 1947 to 2015.
 
 
 
