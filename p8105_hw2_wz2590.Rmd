@@ -189,9 +189,7 @@ unemployment_df
 
 
 ```{r message = FALSE}
-merged_df = left_join(pol_month_df, snp_df, by = c("year", "month")) %>% 
-  left_join(unemployment_df, by = c("year", "month")) %>% 
-  janitor::clean_names()
+merged_df = left_join(pol_month_df, snp_df, unemployment_df, by = c("year", "month"))
 
 year_range = merged_df %>% 
   select(year) %>% 
