@@ -14,9 +14,9 @@ library(tidyverse)
 
 Read and clean the Mr. Trash Wheel sheet.
 
-```{r}
+```{r message = FALSE, warning = FALSE}
 trashWheels_df = readxl::read_excel("./data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx", 
-                                    range = "A2:N408") %>%
+                                    range = "A2:N534") %>%
   janitor::clean_names() %>% # make the naming uniform
   drop_na(dumpster) %>% # drop all the rows that is not dumpster specific
   mutate(sports_balls = round(sports_balls))
@@ -26,7 +26,7 @@ trashWheels_df
 
 Read and clean precipitation data for 2018 and 2019.
 
-```{r}
+```{r message = FALSE}
 precipitation_18_raw = readxl::read_excel("./data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx", 
                                       sheet = "2018 Precipitation",
                                       range = "A2:B14")
@@ -35,12 +35,12 @@ precipitation_18_raw = readxl::read_excel("./data/Trash-Wheel-Collection-Totals-
 precipitation_18_tidy = precipitation_18_raw %>% 
   janitor::clean_names() %>% 
   mutate(year = 2018) %>%
-  subset(select = c(3,1,2))
+  relocate(year)
 
 precipitation_18_tidy
 ```
 
-```{r}
+```{r message = FALSE}
 precipitation_19_raw = readxl::read_excel("./data/Trash-Wheel-Collection-Totals-7-2020-2.xlsx", 
                                       sheet = "2019 Precipitation",
                                       range = "A2:B14")
@@ -49,13 +49,13 @@ precipitation_19_raw = readxl::read_excel("./data/Trash-Wheel-Collection-Totals-
 precipitation_19_tidy = precipitation_19_raw %>% 
   janitor::clean_names() %>% 
   mutate(year = 2019,) %>%
-  subset(select = c(3,1,2))
+  relocate(year)
 
 precipitation_19_tidy
 ```
 
 Combine the 2018 and 2019 data, and convert month to a character variable
-```{r}
+```{r message = FALSE}
 precipitation_comb = 
   bind_rows(precipitation_18_tidy, precipitation_19_tidy) %>%
   mutate(month = month.name[month])
@@ -65,7 +65,7 @@ precipitation_comb
 
 
 Calculate the median number of sports balls in a dumpster in 2019
-```{r}
+```{r message = FALSE}
 sportsBalls_2019 = trashWheels_df %>% 
   filter(year == 2019) %>% 
   select(sports_balls)
@@ -80,14 +80,18 @@ med_sportsBalls_2019
 
 
 
-Mr. Trash Wheel is “a water-wheel vessel that removes trash from the Inner Harbor in Baltimore, Maryland. The trashWheels_df data frame contains these information that is specific to each dumpster. There are `r nrow(trashWheels_df)` observations in the trashWheels_df data frame, each observation has `r ncol(trashWheels_df)` variables.
+Mr. Trash Wheel is a water-wheel vessel that removes trash from the Inner Harbor in Baltimore, Maryland. The trashWheels_df data frame contains these information that is specific to each dumpster. There are `r nrow(trashWheels_df)` observations in the trashWheels_df data frame, each observation has `r ncol(trashWheels_df)` variables.
 
-The precipitation_comb data frame contains the precipitation(in) on each month from Jan 2018 to Jun 2019. There are `r nrow(precipitation_comb )` observations in this data frame
+The precipitation_18_tidy data frame contains the precipitation(in) for each month in year 2018. There are `r nrow(precipitation_18_tidy )` observations in this data frame, since a year has 12 months.
+
+The precipitation_19_tidy data frame contains the precipitation(in) for each month in year 2019. There are `r nrow(precipitation_19_tidy )` observations in this data frame, since a year has 12 months.
+
+The precipitation_comb data frame contains the precipitation(in) on each month from Jan 2018 to Dec 2019. There are `r nrow(precipitation_comb )` observations in this data frame, since two years have 24 months.
 
 The key variables are `month` and `year`, because these variables exist in all data frames above and can be used to combine them. 
 
 The total precipitation in 2018 is `r sum(precipitation_18_tidy$total)` inches. 
-The median number of sports balls in a dumpster in 2019 is 9
+The median number of sports balls in a dumpster in 2019 is 9 balls.
 
 
 
@@ -96,7 +100,7 @@ The median number of sports balls in a dumpster in 2019 is 9
 
 
 First, clean the data in pols-month.csv
-```{r}
+```{r message = FALSE}
 pols_month_df_raw = read_csv("./data/fivethirtyeight_datasets/pols-month.csv")
 
 #pols_month_df_raw
@@ -113,27 +117,63 @@ pol_month_df
 
 
 Second, clean the data in snp.csv using a similar process to the above.
+The format of the data before and after the year 2020 are different. Thus I need 
+to tidy the data seperately.
 
-```{r}
-snp_df_raw = read_csv("./data/fivethirtyeight_datasets/pols-month.csv")
+```{r message = FALSE}
+snp_df_raw_new = read_csv("./data/fivethirtyeight_datasets/snp.csv", n_max = 175)
 
-#snp_df_raw
+#snp_df_raw_old
  
-snp_df = snp_df_raw %>%       
+snp_df_new = snp_df_raw_new %>%       
   janitor::clean_names() %>% 
-  separate(mon, into = c("year", "month", "day"), convert = T) %>% 
-  mutate(month = month.name[month], 
-         president = ifelse(prez_gop >= 1 & prez_dem == 0, "gop", "dem")) %>% 
-  select(-c(day, prez_gop, prez_dem)) %>% 
-  arrange(year, month)
+  separate(date, into = c("year", "month", "day"), sep = "/") %>% 
+  mutate(year = as.integer(year),
+         month = as.integer(month),
+         day = as.integer(day)) %>% 
+  arrange(year, month, day) %>% 
+  mutate(month = month.name[as.numeric(month)], 
+         year = year + 2000) 
   
+#snp_df_new
+```
+
+```{r message = FALSE}
+raw_colNames = read_csv("./data/fivethirtyeight_datasets/snp.csv", n_max = 0) %>% 
+  names()
+
+snp_df_raw_old = read_csv("./data/fivethirtyeight_datasets/snp.csv", skip = 176, col_names = raw_colNames)
+
+#snp_df_raw_old
+ 
+snp_df_old = snp_df_raw_old %>%       
+  janitor::clean_names() %>% 
+  separate(date, into = c("month", "day", "year"), sep = "/") %>% 
+  mutate(year = as.integer(year),
+         month = as.integer(month),
+         day = as.integer(day)) %>% 
+  mutate(month = month.name[as.numeric(month)], 
+         year = ifelse(year == 00, year + 2000, year + 1900)) %>% 
+  relocate(year, month, day, close) %>% 
+  arrange(year, month, day)
+  
+#snp_df_old
+
+
+
+
+snp_df = rbind(snp_df_old, snp_df_new) %>% 
+  select(-day)
 snp_df
 ```
 
 
+
+
+
 Tidy the unemployment data so that it can be merged with the previous datasets. 
 
-```{r}
+```{r message = FALSE}
 unemployment_df_raw = read.csv("./data/fivethirtyeight_datasets/unemployment.csv") 
 
 #unemployment_df_raw
@@ -148,7 +188,7 @@ unemployment_df
 ```
 
 
-```{r}
+```{r message = FALSE}
 merged_df = left_join(pol_month_df, snp_df, by = c("year", "month")) %>% 
   left_join(unemployment_df, by = c("year", "month")) %>% 
   janitor::clean_names()
@@ -177,7 +217,7 @@ The merged_df data frame is a combination of the previous three with key variabl
 
 Load and tidy the data
 
-```{r}
+```{r message = FALSE}
 baby_names_df = read_csv("./data/Popular_Baby_Names.csv") %>% 
   janitor::clean_names() %>%
   #view %>% 
@@ -194,7 +234,7 @@ baby_names_df = read_csv("./data/Popular_Baby_Names.csv") %>%
 
 Produce a well-structured, reader-friendly table showing the rank in popularity of the name “Olivia” as a female baby name over time.
 
-```{r}
+```{r message = FALSE}
 Olivia_rankTable = baby_names_df %>% 
   filter(childs_first_name == "Olivia", gender == "FEMALE") %>%
   pivot_wider(names_from = "year_of_birth",
@@ -208,7 +248,7 @@ Olivia_rankTable
 
 Produce a similar table showing the most popular name among male children over time.
 
-```{r}
+```{r message = FALSE}
 boy_nameRank = baby_names_df %>% 
   filter(gender == "MALE", rank == 1) %>% 
   select(-count, -rank, -gender) %>% 
@@ -223,7 +263,7 @@ boy_nameRank
 
 For male, white non-hispanic children born in 2016, produce a scatter plot showing the number of children with a name (y axis) against the rank in popularity of that name (x axis).
 
-```{r}
+```{r message = FALSE}
 name_vs_rank_16 = baby_names_df %>% 
   filter(year_of_birth == 2016,
          gender == "MALE",
