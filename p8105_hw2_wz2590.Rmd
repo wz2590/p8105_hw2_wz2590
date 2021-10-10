@@ -153,6 +153,7 @@ unemployment_df_raw = read.csv("./data/fivethirtyeight_datasets/unemployment.csv
 unemployment_df = unemployment_df_raw %>%
   pivot_longer(Jan:Dec, names_to = "month", values_to = "unemployment_percentage") %>%
   mutate(month = match(month, month.abb), month = month.name[month]) %>% 
+  drop_na(unemployment_percentage) %>% 
   janitor::clean_names()
 
 unemployment_df
@@ -175,10 +176,14 @@ year_range
 
 
 
-Describe the data:
-The pol_month_df data frame describes the number of national politicians who are democratic or republican at any given time. It has `r nrow(pol_month_df)` observations, with each observations having `r ncol(pol_month_df)` variables.  
-The snp_df data frame describes the Standard & Poor’s stock market index (S&P), often used as a representative measure of stock market as a whole. It has `r nrow(snp_df)` observations, with each observations having `r ncol(snp_df)` variables.  
-The unemployment_df data frame contains the unemployment percentage for each month from January 1948 to December 2015. It has `r nrow(unemployment_df)` observations, with each observations having `r ncol(unemployment_df)` variables.  
+Describe the data:  
+  
+The pol_month_df data frame describes the number of national politicians who are democratic or republican at any given time, from Jan 1947 to June 2015. It has `r nrow(pol_month_df)` observations, with each observations having `r ncol(pol_month_df)` variables.  
+  
+The snp_df data frame describes the Standard & Poor’s stock market index (S&P), often used as a representative measure of stock market as a whole. It contains the closing values of the S&P stock index for each month from Jan 1950 to July 2015 . It has `r nrow(snp_df)` observations, with each observations having `r ncol(snp_df)` variables.  
+  
+The unemployment_df data frame contains the unemployment percentage for each month from January 1948 to June 2015. It has `r nrow(unemployment_df)` observations, with each observations having `r ncol(unemployment_df)` variables.  
+  
 The merged_df data frame is a combination of the previous three with key variables `year` and `month`. It has `r nrow(merged_df)` observations, with each observations having `r ncol(merged_df)` variables. The year ranges from 1947 to 2015.
 
 
@@ -187,7 +192,7 @@ The merged_df data frame is a combination of the previous three with key variabl
 ## Problem 3
 
 
-Load and tidy the data
+Load and tidy the data of the popularity of baby names。
 
 ```{r message = FALSE, warning = FALSE}
 baby_names_df = read_csv("./data/Popular_Baby_Names.csv") %>% 
@@ -208,10 +213,12 @@ Produce a well-structured, reader-friendly table showing the rank in popularity 
 ```{r message = FALSE}
 Olivia_rankTable = baby_names_df %>% 
   filter(childs_first_name == "Olivia", gender == "FEMALE") %>%
+  arrange(year_of_birth) %>% 
   pivot_wider(names_from = "year_of_birth",
               values_from = "rank",
               id_cols = ethnicity
-    )
+    ) %>% 
+  knitr::kable()
 
 Olivia_rankTable
   
@@ -223,10 +230,12 @@ Produce a similar table showing the most popular name among male children over t
 boy_nameRank = baby_names_df %>% 
   filter(gender == "MALE", rank == 1) %>% 
   select(-count, -rank, -gender) %>% 
+  arrange(year_of_birth) %>% 
   pivot_wider(
     names_from = "year_of_birth",
     values_from = "childs_first_name"
-    )
+    ) %>% 
+  knitr::kable()
   
 boy_nameRank
 ```
