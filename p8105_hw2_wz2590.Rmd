@@ -6,7 +6,7 @@ author: Weiheng Zhang
 
 
 
-### Problem 1
+## Problem 1
 ```{r  message = FALSE}
 library(tidyverse)
 ```
@@ -93,10 +93,10 @@ The key variables are `month` and `year`, because these variables exist in all d
 The total precipitation in 2018 is `r sum(precipitation_18_tidy$total)` inches. 
 The median number of sports balls in a dumpster in 2019 is 9 balls.
 
+  
 
 
-
-### Problem 2
+## Problem 2
 
 
 First, clean the data in pols-month.csv
@@ -210,7 +210,7 @@ The merged_df data frame is a combination of the previous three with key variabl
 
 
 
-### Problem 3
+## Problem 3
 
 
 Load and tidy the data
