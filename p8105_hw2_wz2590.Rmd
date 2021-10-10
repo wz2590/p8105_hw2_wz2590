@@ -80,7 +80,7 @@ med_sportsBalls_2019
 
 
 
-Mr. Trash Wheel is a water-wheel vessel that removes trash from the Inner Harbor in Baltimore, Maryland. The trashWheels_df data frame contains these information that is specific to each dumpster. There are `r nrow(trashWheels_df)` observations in the trashWheels_df data frame, each observation has `r ncol(trashWheels_df)` variables.
+Mr. Trash Wheel is a water-wheel vessel that removes trash from the Inner Harbor in Baltimore, Maryland. There are `r nrow(trashWheels_df)` observations in the trashWheels_df data frame, each observation has `r ncol(trashWheels_df)` variables: Dumpster's label, Month, Year, Date, Weight_tons, volume_cubic_yards, plastic_bottles, polystyrene, cigarette_butts, glass_bottles, grocery_bags, chip_bags, sports_bags, homes_powered
 
 The precipitation_18_tidy data frame contains the precipitation(in) for each month in year 2018. There are `r nrow(precipitation_18_tidy )` observations in this data frame, since a year has 12 months.
 
@@ -117,8 +117,8 @@ pol_month_df
 
 
 Second, clean the data in snp.csv using a similar process to the above.
-The format of the data before and after the year 2020 are different. Thus I need 
-to tidy the data seperately.
+The format of the data before and after the year 2000 are different. Thus I need 
+to read and tidy the old and new data separately. (It seems that Mac users don't have this problem?)
 
 ```{r message = FALSE}
 snp_df_raw_new = read_csv("./data/fivethirtyeight_datasets/snp.csv", n_max = 175)
@@ -127,7 +127,7 @@ snp_df_raw_new = read_csv("./data/fivethirtyeight_datasets/snp.csv", n_max = 175
  
 snp_df_new = snp_df_raw_new %>%       
   janitor::clean_names() %>% 
-  separate(date, into = c("year", "month", "day"), sep = "/") %>% 
+  separate(date, into = c("year", "month", "day"), convert = T) %>% 
   mutate(year = as.integer(year),
          month = as.integer(month),
          day = as.integer(day)) %>% 
@@ -152,17 +152,17 @@ snp_df_old = snp_df_raw_old %>%
   mutate(year = as.integer(year),
          month = as.integer(month),
          day = as.integer(day)) %>% 
+  arrange(year, month, day) %>% 
   mutate(month = month.name[as.numeric(month)], 
          year = ifelse(year == 00, year + 2000, year + 1900)) %>% 
-  relocate(year, month, day, close) %>% 
-  arrange(year, month, day)
+  relocate(year, month, day, close)
+  
   
 #snp_df_old
 
 
-
-
 snp_df = rbind(snp_df_old, snp_df_new) %>% 
+  mutate(year = as.integer(year)) %>% 
   select(-day)
 snp_df
 ```
@@ -189,13 +189,15 @@ unemployment_df
 
 
 ```{r message = FALSE}
-merged_df = left_join(pol_month_df, snp_df, unemployment_df, by = c("year", "month"))
+merged_df = left_join(pol_month_df, snp_df, by = c("year", "month")) %>% 
+  left_join(unemployment_df, by = c("year", "month"))
+
+merged_df
 
 year_range = merged_df %>% 
   select(year) %>% 
   range()
 
-merged_df
 year_range
 ```
 
@@ -215,7 +217,7 @@ The merged_df data frame is a combination of the previous three with key variabl
 
 Load and tidy the data
 
-```{r message = FALSE}
+```{r message = FALSE, warning = FALSE}
 baby_names_df = read_csv("./data/Popular_Baby_Names.csv") %>% 
   janitor::clean_names() %>%
   #view %>% 
@@ -224,8 +226,7 @@ baby_names_df = read_csv("./data/Popular_Baby_Names.csv") %>%
                             "BLACK NON HISP" = "BLACK NON HISPANIC",
                             "WHITE NON HISP" = "WHITE NON HISPANIC"),
          childs_first_name = str_to_sentence(childs_first_name)) %>% 
-  dplyr::distinct() %>% 
-  
+  distinct() %>% 
   view
 ```
 
