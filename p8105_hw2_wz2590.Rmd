@@ -117,53 +117,25 @@ pol_month_df
 
 
 Second, clean the data in snp.csv using a similar process to the above.
-The format of the data before and after the year 2000 are different. Thus I need 
-to read and tidy the old and new data separately. (It seems that Mac users don't have this problem?)
+I WILL NEVER USE EXCEL TO OPEN CSV FILES AGAIN!!! 
 
 ```{r message = FALSE}
-snp_df_raw_new = read_csv("./data/fivethirtyeight_datasets/snp.csv", n_max = 175)
+
+snp_df_raw = read_csv("./data/fivethirtyeight_datasets/snp.csv")
 
 #snp_df_raw_old
  
-snp_df_new = snp_df_raw_new %>%       
-  janitor::clean_names() %>% 
-  separate(date, into = c("year", "month", "day"), convert = T) %>% 
-  mutate(year = as.integer(year),
-         month = as.integer(month),
-         day = as.integer(day)) %>% 
-  arrange(year, month, day) %>% 
-  mutate(month = month.name[as.numeric(month)], 
-         year = year + 2000) 
-  
-#snp_df_new
-```
-
-```{r message = FALSE}
-raw_colNames = read_csv("./data/fivethirtyeight_datasets/snp.csv", n_max = 0) %>% 
-  names()
-
-snp_df_raw_old = read_csv("./data/fivethirtyeight_datasets/snp.csv", skip = 176, col_names = raw_colNames)
-
-#snp_df_raw_old
- 
-snp_df_old = snp_df_raw_old %>%       
+snp_df = snp_df_raw %>%       
   janitor::clean_names() %>% 
   separate(date, into = c("month", "day", "year"), sep = "/") %>% 
+  select(-day) %>% 
   mutate(year = as.integer(year),
-         month = as.integer(month),
-         day = as.integer(day)) %>% 
-  arrange(year, month, day) %>% 
-  mutate(month = month.name[as.numeric(month)], 
-         year = ifelse(year == 00, year + 2000, year + 1900)) %>% 
-  relocate(year, month, day, close)
+         month = as.integer(month)) %>% 
+  mutate(year = ifelse(year <= 15, year + 2000, year + 1900)) %>% 
+  arrange(year, month) %>% 
+  mutate(month = month.name[as.numeric(month)]) %>% 
+  relocate(year, month, close)
   
-  
-#snp_df_old
-
-
-snp_df = rbind(snp_df_old, snp_df_new) %>% 
-  mutate(year = as.integer(year)) %>% 
-  select(-day)
 snp_df
 ```
 
